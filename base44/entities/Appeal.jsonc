@@ -1,0 +1,119 @@
+{
+  "name": "Appeal",
+  "type": "object",
+  "properties": {
+    "moderation_id": {
+      "type": "string",
+      "description": "Reference to the Moderation being appealed"
+    },
+    "roblox_username": {
+      "type": "string",
+      "description": "The Roblox username of the player submitting the appeal"
+    },
+    "appeal_reason": {
+      "type": "string",
+      "description": "The player's explanation for why the moderation should be lifted"
+    },
+    "why_accepted": {
+      "type": "string",
+      "description": "The player's answer to: Why should your appeal be accepted?"
+    },
+    "deserved_infraction": {
+      "type": "string",
+      "description": "The player's answer to: Did you deserve this infraction in your opinion?"
+    },
+    "status": {
+      "type": "string",
+      "description": "Review state of the appeal",
+      "enum": [
+        "Pending",
+        "Under Review",
+        "Approved",
+        "Denied"
+      ],
+      "default": "Pending"
+    },
+    "staff_response": {
+      "type": "string",
+      "description": "Optional response from the staff team reviewing the appeal, shown to the player"
+    },
+    "internal_notes": {
+      "type": "string",
+      "description": "Private notes shared between staff only, never shown to the player"
+    },
+    "can_reappeal": {
+      "type": "boolean",
+      "description": "Whether the player may submit a new appeal after this one is denied",
+      "default": true
+    }
+  },
+  "required": [
+    "moderation_id",
+    "appeal_reason"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.roblox_username": "{{user.data.roblox_username}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.roblox_username": "{{user.data.roblox_username}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "name": "Announcement",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Headline of the announcement"
+    },
+    "body": {
+      "type": "string",
+      "description": "Body text of the announcement"
+    },
+    "type": {
+      "type": "string",
+      "description": "Category of the announcement",
+      "enum": [
+        "info",
+        "warning",
+        "maintenance",
+        "update",
+        "event"
+      ],
+      "default": "info"
+    },
+    "active": {
+      "type": "boolean",
+      "description": "Whether the announcement is currently visible to visitors",
+      "default": true
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the announcement auto-expires"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Email of the owner who created the announcement"
+    },
+    "pinned": {
+      "type": "boolean",
+      "description": "Whether the announcement is pinned to the top of the list",
+      "default": false
+    }
+  },
+  "required": [
+    "title",
+    "body"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    }
+  }
+}

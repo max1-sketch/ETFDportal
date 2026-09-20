@@ -1,0 +1,41 @@
+{
+  "properties": {
+    "role": {
+      "type": "string",
+      "description": "The role of the user in the app",
+      "enum": [
+        "admin",
+        "staff",
+        "user"
+      ]
+    },
+    "roblox_username": {
+      "type": "string",
+      "description": "The player's Roblox username, used to link in-game moderations"
+    },
+    "is_owner": {
+      "type": "boolean",
+      "description": "Whether this user is an owner (auto-set for @staffwaitrose.net accounts)",
+      "default": false
+    },
+    "banned": {
+      "type": "boolean",
+      "description": "Whether this user account has been banned from the portal",
+      "default": false
+    },
+    "last_ip": {
+      "type": "string",
+      "description": "The last IP address the user logged in from"
+    },
+    "last_seen": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user last logged in"
+    }
+  },
+  "required": [
+    "role"
+  ],
+  "name": "User",
+  "type": "object"
+}

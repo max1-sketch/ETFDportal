@@ -1,0 +1,98 @@
+{
+  "name": "VerificationRequest",
+  "type": "object",
+  "properties": {
+    "roblox_username": {
+      "type": "string",
+      "description": "The Roblox username the player wants to verify"
+    },
+    "code": {
+      "type": "string",
+      "description": "The one-time code the player was asked to add to their Roblox bio"
+    },
+    "status": {
+      "type": "string",
+      "description": "Review state of the verification request",
+      "enum": [
+        "pending",
+        "approved",
+        "denied"
+      ],
+      "default": "pending"
+    },
+    "reviewer_note": {
+      "type": "string",
+      "description": "Optional note left by the staff member who reviewed the request"
+    }
+  },
+  "required": [
+    "roblox_username",
+    "code",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    }
+  }
+}

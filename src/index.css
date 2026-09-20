@@ -1,0 +1,340 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --font-heading: ui-sans-serif, system-ui, sans-serif;
+    --font-body: ui-sans-serif, system-ui, sans-serif;
+    --font-display: ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html,
+  body {
+    background-color: #020617 !important; /* Force dark background globally */
+    color: #f8fafc;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    color-scheme: dark; /* Tell browser native controls to use dark mode */
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+  }
+}
+
+/* ===== Seasonal Themes ===== */
+
+/* ---- Winter — Frozen Tsunami ---- */
+[data-season="winter"] {
+  --background: 215 35% 4%;
+  --card: 215 28% 6%;
+  --popover: 215 28% 6%;
+}
+
+[data-season="winter"] html,
+[data-season="winter"] body {
+  background-color: #080e1a !important;
+}
+
+/* Winter: text colors → icy blue */
+[data-season="winter"] .text-cyan-200 { color: #d0ebff; }
+[data-season="winter"] .text-cyan-300 { color: #a5d8ff; }
+[data-season="winter"] .text-cyan-300\/80 { color: rgba(165, 216, 255, 0.8); }
+[data-season="winter"] .text-cyan-400 { color: #74c0fc; }
+[data-season="winter"] .text-cyan-400\/70 { color: rgba(116, 192, 252, 0.7); }
+[data-season="winter"] .text-cyan-400\/80 { color: rgba(116, 192, 252, 0.8); }
+[data-season="winter"] .text-cyan-500 { color: #4dabf7; }
+[data-season="winter"] .text-sky-400 { color: #4dabf7; }
+[data-season="winter"] .hover\:text-cyan-300:hover { color: #a5d8ff; }
+
+/* Winter: backgrounds → ice blue */
+[data-season="winter"] .bg-cyan-400 { background-color: #4dabf7; }
+[data-season="winter"] .bg-cyan-500 { background-color: #4dabf7; }
+[data-season="winter"] .bg-cyan-500\/10 { background-color: rgba(77, 171, 247, 0.1); }
+[data-season="winter"] .bg-cyan-500\/15 { background-color: rgba(77, 171, 247, 0.15); }
+[data-season="winter"] .bg-cyan-500\/20 { background-color: rgba(77, 171, 247, 0.2); }
+[data-season="winter"] .bg-blue-600\/15 { background-color: rgba(28, 126, 214, 0.15); }
+[data-season="winter"] .bg-blue-600\/20 { background-color: rgba(28, 126, 214, 0.2); }
+
+/* Winter: borders → frosty blue */
+[data-season="winter"] .border-cyan-500\/20 { border-color: rgba(77, 171, 247, 0.2); }
+[data-season="winter"] .border-cyan-500\/30 { border-color: rgba(77, 171, 247, 0.3); }
+[data-season="winter"] .border-cyan-400\/50 { border-color: rgba(116, 192, 252, 0.5); }
+[data-season="winter"] .border-cyan-400\/60 { border-color: rgba(116, 192, 252, 0.6); }
+[data-season="winter"] .hover\:border-cyan-500\/40:hover { border-color: rgba(77, 171, 247, 0.4); }
+
+/* Winter: shadows → icy glow */
+[data-season="winter"] .shadow-cyan-500\/10 { --tw-shadow-color: rgba(77, 171, 247, 0.1); }
+[data-season="winter"] .shadow-cyan-500\/25 { --tw-shadow-color: rgba(77, 171, 247, 0.25); }
+[data-season="winter"] .shadow-cyan-500\/30 { --tw-shadow-color: rgba(77, 171, 247, 0.3); }
+[data-season="winter"] .shadow-cyan-500\/40 { --tw-shadow-color: rgba(77, 171, 247, 0.4); }
+[data-season="winter"] .shadow-cyan-900\/40 { --tw-shadow-color: rgba(10, 20, 45, 0.4); }
+[data-season="winter"] .shadow-cyan-950\/40 { --tw-shadow-color: rgba(10, 20, 45, 0.4); }
+[data-season="winter"] .hover\:shadow-cyan-500\/10:hover { --tw-shadow-color: rgba(77, 171, 247, 0.1); }
+
+/* Winter: ring → ice blue focus */
+[data-season="winter"] .ring-cyan-400\/50 { --tw-ring-color: rgba(116, 192, 252, 0.5); }
+
+/* Winter: gradients → ice blue → deep winter blue */
+[data-season="winter"] .from-cyan-300 {
+  --tw-gradient-from: #a5d8ff var(--tw-gradient-from-position, 0%);
+}
+[data-season="winter"] .from-cyan-400 {
+  --tw-gradient-from: #4dabf7 var(--tw-gradient-from-position, 0%);
+}
+[data-season="winter"] .from-cyan-500 {
+  --tw-gradient-from: #4dabf7 var(--tw-gradient-from-position, 0%);
+}
+[data-season="winter"] .from-cyan-500\/20 {
+  --tw-gradient-from: rgba(77, 171, 247, 0.2) var(--tw-gradient-from-position, 0%);
+}
+[data-season="winter"] .from-cyan-500\/30 {
+  --tw-gradient-from: rgba(77, 171, 247, 0.3) var(--tw-gradient-from-position, 0%);
+}
+[data-season="winter"] .via-sky-400 {
+  --tw-gradient-via: #4dabf7 var(--tw-gradient-via-position, 50%);
+}
+[data-season="winter"] .to-blue-500 {
+  --tw-gradient-to: #1c7ed6 var(--tw-gradient-to-position, 100%);
+}
+[data-season="winter"] .to-blue-600 {
+  --tw-gradient-to: #1c7ed6 var(--tw-gradient-to-position, 100%);
+}
+[data-season="winter"] .to-blue-600\/20 {
+  --tw-gradient-to: rgba(28, 126, 214, 0.2) var(--tw-gradient-to-position, 100%);
+}
+[data-season="winter"] .to-blue-600\/30 {
+  --tw-gradient-to: rgba(28, 126, 214, 0.3) var(--tw-gradient-to-position, 100%);
+}
+[data-season="winter"] .to-blue-950 {
+  --tw-gradient-to: #0a1228 var(--tw-gradient-to-position, 100%);
+}
+
+/* Winter: accent */
+[data-season="winter"] .accent-cyan-500 { accent-color: #4dabf7; }
+
+/* Winter: frosty card glass effect */
+[data-season="winter"] .backdrop-blur-sm,
+[data-season="winter"] .backdrop-blur-xl {
+  backdrop-filter: blur(8px) saturate(0.85);
+}
+
+/* ---- Icicles ---- */
+.icicle {
+  background: linear-gradient(
+    to bottom,
+    rgba(208, 235, 255, 0.55) 0%,
+    rgba(165, 216, 255, 0.35) 35%,
+    rgba(116, 192, 252, 0.12) 75%,
+    transparent 100%
+  );
+  clip-path: polygon(18% 0, 82% 0, 50% 100%);
+  filter: drop-shadow(0 0 3px rgba(165, 216, 255, 0.35));
+}
+.icicle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 38%;
+  width: 1.5px;
+  height: 55%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.7), transparent);
+  border-radius: 50%;
+}
+
+@keyframes icicle-shimmer {
+  0% { opacity: 0.65; filter: drop-shadow(0 0 2px rgba(165, 216, 255, 0.2)) brightness(0.95); }
+  100% { opacity: 1; filter: drop-shadow(0 0 5px rgba(165, 216, 255, 0.45)) brightness(1.2); }
+}
+
+/* ---- Ice crystal sparkles ---- */
+.sparkle {
+  background: white;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  box-shadow: 0 0 6px rgba(208, 235, 255, 0.7), 0 0 12px rgba(116, 192, 252, 0.4);
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  40% { opacity: 0.9; transform: scale(1.1) rotate(90deg); }
+  60% { opacity: 0.7; transform: scale(0.9) rotate(135deg); }
+}
+
+/* ---- Snow — 3 depth layers ---- */
+@keyframes snowfall-bg {
+  0% { transform: translateY(-10px) translateX(0); opacity: 0; }
+  5% { opacity: 1; }
+  25% { transform: translateY(25vh) translateX(6px); }
+  50% { transform: translateY(50vh) translateX(-3px); }
+  75% { transform: translateY(75vh) translateX(5px); }
+  95% { opacity: 1; }
+  100% { transform: translateY(105vh) translateX(0); opacity: 0; }
+}
+
+@keyframes snowfall-mid {
+  0% { transform: translateY(-10px) translateX(0); opacity: 0; }
+  5% { opacity: 1; }
+  20% { transform: translateY(20vh) translateX(14px); }
+  40% { transform: translateY(40vh) translateX(-8px); }
+  60% { transform: translateY(60vh) translateX(10px); }
+  80% { transform: translateY(80vh) translateX(-6px); }
+  95% { opacity: 1; }
+  100% { transform: translateY(105vh) translateX(0); opacity: 0; }
+}
+
+@keyframes snowfall-fg {
+  0% { transform: translateY(-10px) translateX(0); opacity: 0; }
+  5% { opacity: 1; }
+  15% { transform: translateY(15vh) translateX(22px); }
+  35% { transform: translateY(35vh) translateX(-16px); }
+  55% { transform: translateY(55vh) translateX(20px); }
+  75% { transform: translateY(75vh) translateX(-14px); }
+  95% { opacity: 1; }
+  100% { transform: translateY(105vh) translateX(0); opacity: 0; }
+}
+
+/* ---- Winter UI: Frosty buttons, patterns, hero, badges ---- */
+
+/* Pill-shaped frosty CTA buttons */
+[data-season="winter"] .from-cyan-500.to-blue-600,
+[data-season="winter"] .from-cyan-400.to-blue-500 {
+  border-radius: 9999px !important;
+  box-shadow:
+    0 0 20px rgba(77, 171, 247, 0.3),
+    0 4px 15px rgba(28, 126, 214, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(28, 126, 214, 0.25) !important;
+  transition: box-shadow 0.3s ease, transform 0.2s ease !important;
+}
+
+[data-season="winter"] .from-cyan-500.to-blue-600:hover,
+[data-season="winter"] .from-cyan-400.to-blue-500:hover {
+  box-shadow:
+    0 0 35px rgba(77, 171, 247, 0.5),
+    0 6px 25px rgba(28, 126, 214, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(28, 126, 214, 0.35) !important;
+  transform: translateY(-1px);
+}
+
+/* Frosty outline / secondary buttons */
+[data-season="winter"] .bg-white\/5.border-white\/15,
+[data-season="winter"] .bg-white\/\[0.05\].border-white\/15 {
+  border-radius: 9999px !important;
+  border-color: rgba(165, 216, 255, 0.2) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 12px rgba(77, 171, 247, 0.08) !important;
+}
+
+/* Frosted glass cards */
+[data-season="winter"] .rounded-2xl.bg-white\/\[0.04\],
+[data-season="winter"] .rounded-2xl.bg-white\/\[0.05\] {
+  border-color: rgba(165, 216, 255, 0.1) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 20px rgba(77, 171, 247, 0.04) !important;
+}
+
+/* Snowflake background pattern */
+[data-season="winter"] body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Cg stroke='rgba(165,216,255,0.05)' stroke-width='0.8' fill='none' stroke-linecap='round'%3E%3Cline x1='15' y1='3' x2='15' y2='27'/%3E%3Cline x1='3' y1='15' x2='27' y2='15'/%3E%3Cline x1='6.4' y1='6.4' x2='23.6' y2='23.6'/%3E%3Cline x1='23.6' y1='6.4' x2='6.4' y2='23.6'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 80px 80px;
+  background-repeat: repeat;
+}
+
+/* Winter hero background image */
+[data-season="winter"] .winter-hero-image {
+  opacity: 0.4;
+}
+
+/* Winter-only elements (hidden outside winter) */
+.winter-only { display: none; }
+[data-season="winter"] .winter-only { display: flex; }
+
+/* Winter badge frost glow */
+[data-season="winter"] .winter-badge {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 15px rgba(77, 171, 247, 0.15);
+}
+
+/* Snowflake spin for badge icon */
+@keyframes snowflake-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+[data-season="winter"] .snowflake-spin {
+  animation: snowflake-spin 8s linear infinite;
+}

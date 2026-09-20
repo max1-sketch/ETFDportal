@@ -1,0 +1,96 @@
+{
+  "name": "StaffLog",
+  "type": "object",
+  "properties": {
+    "staff_username": {
+      "type": "string",
+      "description": "The staff member who performed the action"
+    },
+    "action": {
+      "type": "string",
+      "description": "What kind of staff action was performed",
+      "enum": [
+        "appeal_decision",
+        "moderation_issued",
+        "moderation_deleted",
+        "user_role_changed"
+      ]
+    },
+    "target": {
+      "type": "string",
+      "description": "Who or what was acted on, e.g. a Roblox username or appeal reference"
+    },
+    "detail": {
+      "type": "string",
+      "description": "Short human-readable summary of the action"
+    }
+  },
+  "required": [
+    "staff_username",
+    "action",
+    "detail"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    }
+  }
+}

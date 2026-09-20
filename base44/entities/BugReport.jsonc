@@ -1,0 +1,109 @@
+{
+  "name": "BugReport",
+  "type": "object",
+  "properties": {
+    "roblox_username": {
+      "type": "string",
+      "description": "The Roblox username of the player reporting the bug"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short summary of the bug"
+    },
+    "description": {
+      "type": "string",
+      "description": "Steps to reproduce, what was expected, and what actually happened"
+    },
+    "severity": {
+      "type": "string",
+      "description": "How impactful the bug is",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Low"
+    },
+    "status": {
+      "type": "string",
+      "description": "Review state of the bug report",
+      "enum": [
+        "Submitted",
+        "Confirmed",
+        "Declined"
+      ],
+      "default": "Submitted"
+    }
+  },
+  "required": [
+    "roblox_username",
+    "title",
+    "description"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    }
+  }
+}

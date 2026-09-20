@@ -1,0 +1,121 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "roblox_username": {
+      "type": "string",
+      "description": "The Roblox username the notification is addressed to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short headline of the notification"
+    },
+    "body": {
+      "type": "string",
+      "description": "Additional detail shown to the player"
+    },
+    "type": {
+      "type": "string",
+      "description": "What kind of event triggered the notification",
+      "enum": [
+        "appeal_decision",
+        "moderation_issued"
+      ],
+      "default": "appeal_decision"
+    },
+    "read": {
+      "type": "boolean",
+      "description": "Whether the player has seen this notification",
+      "default": false
+    }
+  },
+  "required": [
+    "roblox_username",
+    "title",
+    "body"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.roblox_username": "{{user.data.roblox_username}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.roblox_username": "{{user.data.roblox_username}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    }
+  }
+}

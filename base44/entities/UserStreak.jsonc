@@ -1,0 +1,95 @@
+{
+  "name": "UserStreak",
+  "type": "object",
+  "properties": {
+    "roblox_username": {
+      "type": "string",
+      "description": "The verified Roblox username this streak belongs to"
+    },
+    "discord_id": {
+      "type": "string",
+      "description": "The member's Discord user ID, required to participate in the 7-Day Devoted Quest and receive the Devoted role"
+    },
+    "current_streak": {
+      "type": "number",
+      "description": "Current consecutive days claimed",
+      "default": 0
+    },
+    "last_claimed_date": {
+      "type": "string",
+      "format": "date",
+      "description": "The date (YYYY-MM-DD) the player last claimed their daily streak"
+    },
+    "tag_unlocked": {
+      "type": "boolean",
+      "description": "Whether the player reached a 7-day streak and the Discord bot assigned the Devoted role",
+      "default": false
+    },
+    "total_days_claimed": {
+      "type": "number",
+      "description": "Lifetime total of daily claims across all streaks",
+      "default": 0
+    }
+  },
+  "required": [
+    "roblox_username"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.roblox_username": "{{user.data.roblox_username}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.roblox_username": "{{user.data.roblox_username}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "data.roblox_username": "{{user.data.roblox_username}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    }
+  }
+}

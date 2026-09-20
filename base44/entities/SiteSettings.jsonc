@@ -1,0 +1,145 @@
+{
+  "name": "SiteSettings",
+  "type": "object",
+  "properties": {
+    "maintenance_mode": {
+      "type": "boolean",
+      "description": "Whether the site is in maintenance mode (non-owners see a maintenance screen)",
+      "default": false
+    },
+    "maintenance_message": {
+      "type": "string",
+      "description": "Custom message shown on the maintenance screen"
+    },
+    "maintenance_scheduled_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When scheduled maintenance is expected to end"
+    },
+    "banner_enabled": {
+      "type": "boolean",
+      "description": "Whether the top site banner / hint bar is visible",
+      "default": false
+    },
+    "banner_message": {
+      "type": "string",
+      "description": "Text shown in the top site banner"
+    },
+    "banner_color": {
+      "type": "string",
+      "description": "Color theme of the banner",
+      "enum": [
+        "cyan",
+        "amber",
+        "rose",
+        "violet",
+        "emerald"
+      ],
+      "default": "cyan"
+    },
+    "banner_dismissible": {
+      "type": "boolean",
+      "description": "Whether users can dismiss the banner",
+      "default": true
+    },
+    "site_status": {
+      "type": "string",
+      "description": "Current site status indicator shown to visitors",
+      "enum": [
+        "operational",
+        "degraded",
+        "maintenance",
+        "offline"
+      ],
+      "default": "operational"
+    },
+    "welcome_message": {
+      "type": "string",
+      "description": "Custom welcome message shown on the home page"
+    },
+    "portal_locked": {
+      "type": "boolean",
+      "description": "Whether the member portal is locked to read-only",
+      "default": false
+    },
+    "appeals_frozen": {
+      "type": "boolean",
+      "description": "Whether new appeal submissions are frozen",
+      "default": false
+    },
+    "emergency_alert_enabled": {
+      "type": "boolean",
+      "description": "Whether the emergency alert banner is active",
+      "default": false
+    },
+    "emergency_alert_message": {
+      "type": "string",
+      "description": "Urgent message shown in the emergency alert banner"
+    },
+    "feature_showcase_enabled": {
+      "type": "boolean",
+      "description": "Whether the community showcase section is enabled",
+      "default": true
+    },
+    "auto_verify_enabled": {
+      "type": "boolean",
+      "description": "Whether new users skip Roblox bio verification",
+      "default": false
+    },
+    "max_appeals_per_user": {
+      "type": "number",
+      "description": "Maximum appeals a user can submit",
+      "default": 3
+    },
+    "updated_by": {
+      "type": "string",
+      "description": "Email of the owner who last updated settings"
+    }
+  },
+  "required": [],
+  "rls": {
+    "read": {},
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    }
+  }
+}

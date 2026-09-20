@@ -1,0 +1,157 @@
+{
+  "name": "Moderation",
+  "type": "object",
+  "properties": {
+    "roblox_username": {
+      "type": "string",
+      "description": "The Roblox username of the player who was moderated"
+    },
+    "moderation_type": {
+      "type": "string",
+      "description": "The kind of moderation action taken",
+      "enum": [
+        "Warning",
+        "Mute",
+        "Kick",
+        "Temporary Ban",
+        "Permanent Ban"
+      ],
+      "default": "Warning"
+    },
+    "reason": {
+      "type": "string",
+      "description": "The short reason for the moderation"
+    },
+    "details": {
+      "type": "string",
+      "description": "Additional context about what happened"
+    },
+    "moderation_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the moderation was issued in-game"
+    },
+    "duration": {
+      "type": "string",
+      "description": "How long the moderation lasts, e.g. 24h, 7d, Permanent"
+    },
+    "status": {
+      "type": "string",
+      "description": "Current state of the moderation",
+      "enum": [
+        "Active",
+        "Expired",
+        "Repealed"
+      ],
+      "default": "Active"
+    },
+    "staff_member": {
+      "type": "string",
+      "description": "The in-game staff member who issued the moderation"
+    },
+    "evidence_type": {
+      "type": "string",
+      "description": "What kind of evidence was attached to justify the moderation",
+      "enum": [
+        "none",
+        "chat_log",
+        "screenshot"
+      ],
+      "default": "none"
+    },
+    "evidence_text": {
+      "type": "string",
+      "description": "Pasted in-game chat log shown as evidence, when evidence_type is chat_log"
+    },
+    "evidence_image_url": {
+      "type": "string",
+      "description": "URL of a screenshot shown as evidence, when evidence_type is screenshot"
+    }
+  },
+  "required": [
+    "roblox_username",
+    "moderation_type",
+    "reason"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.roblox_username": "{{user.data.roblox_username}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    }
+  }
+}

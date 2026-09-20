@@ -1,0 +1,40 @@
+const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="https://db.com/logo_v2.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="google-site-verification" content="9D7RD05dhfPwkGobtWqVhQ72wFCL16gdinO9-C21mIY" />
+    <title>Escape Tsunami for Developers — Member Portal | Moderation & Appeals</title>
+    <meta name="description" content="The official Escape Tsunami for Developers member portal. View your in-game moderation history, check your account standing, and submit appeals for warnings, mutes, kicks, and bans." />
+    <meta name="keywords" content="Escape Tsunami for Developers, Escape Tsunami, tsunami moderation portal, tsunami appeals, Roblox Escape Tsunami, ban appeal, moderation history, account standing" />
+    <meta name="author" content="Escape Tsunami" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://tsunami-shield-portal.db.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Escape Tsunami for Developers — Member Portal" />
+    <meta property="og:description" content="View your moderation history, check your account standing, and submit appeals for the Escape Tsunami for Developers Roblox game." />
+    <meta property="og:url" content="https://tsunami-shield-portal.db.app/" />
+    <meta property="og:site_name" content="Escape Tsunami for Developers" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Escape Tsunami for Developers — Member Portal" />
+    <meta name="twitter:description" content="View your moderation history, check your account standing, and submit appeals for the Escape Tsunami for Developers Roblox game." />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Escape Tsunami for Developers — Member Portal",
+      "url": "https://tsunami-shield-portal.db.app/",
+      "description": "The official member portal for Escape Tsunami for Developers players to track moderation history and submit appeals.",
+      "keywords": "Escape Tsunami for Developers, Escape Tsunami, moderation, appeals, Roblox"
+    }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

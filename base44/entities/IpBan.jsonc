@@ -1,0 +1,71 @@
+{
+  "name": "IpBan",
+  "type": "object",
+  "properties": {
+    "ip_address": {
+      "type": "string",
+      "description": "The IP address banned from accessing the website"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Reason for the IP ban"
+    },
+    "banned_by": {
+      "type": "string",
+      "description": "Email of the staff member who issued the ban"
+    }
+  },
+  "required": [
+    "ip_address"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    }
+  }
+}

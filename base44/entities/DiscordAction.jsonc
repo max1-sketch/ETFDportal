@@ -1,0 +1,171 @@
+{
+  "name": "DiscordAction",
+  "type": "object",
+  "properties": {
+    "discord_user_id": {
+      "type": "string",
+      "description": "Discord user ID of the target user"
+    },
+    "discord_username": {
+      "type": "string",
+      "description": "Discord username for display"
+    },
+    "action_type": {
+      "type": "string",
+      "description": "Discord moderation action for the bot to execute",
+      "enum": [
+        "timeout",
+        "untimeout",
+        "kick",
+        "ban",
+        "unban",
+        "lookup"
+      ],
+      "default": "timeout"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Reason for the action, shown to the user in Discord"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "description": "Timeout duration in minutes (only used for timeout actions)"
+    },
+    "status": {
+      "type": "string",
+      "description": "Whether the bot has executed the action",
+      "enum": [
+        "pending",
+        "completed",
+        "failed"
+      ],
+      "default": "pending"
+    },
+    "issued_by": {
+      "type": "string",
+      "description": "Staff member who issued the action from the dashboard"
+    },
+    "result_message": {
+      "type": "string",
+      "description": "Result message returned by the bot after execution"
+    },
+    "executed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the bot executed the action"
+    },
+    "avatar_url": {
+      "type": "string",
+      "description": "Cached Discord avatar URL from the bot"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Cached Discord display name (global name)"
+    },
+    "accent_color": {
+      "type": "string",
+      "description": "Cached Discord accent color as hex string, e.g. #5865F2"
+    },
+    "banner_url": {
+      "type": "string",
+      "description": "Cached Discord banner URL from the bot"
+    },
+    "bio": {
+      "type": "string",
+      "description": "Cached Discord 'About Me' text"
+    },
+    "account_created": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the Discord account was created (derived from snowflake ID)"
+    },
+    "profile_fetched_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the bot last cached this user's profile data"
+    }
+  },
+  "required": [
+    "discord_user_id",
+    "action_type",
+    "reason"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "staff"
+          }
+        },
+        {
+          "user_condition": {
+            "data.is_owner": true
+          }
+        }
+      ]
+    }
+  }
+}
