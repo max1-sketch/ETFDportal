@@ -5,38 +5,49 @@ import GoogleIcon from "@/components/GoogleIcon";
 import { safeReturnTo } from "@/lib/authReturnTo";
 import { base44 } from "@/api/base44Client";
 
-// Helper to save authenticated user into local storage and global state
-const saveAuthUser = (token, provider = "google") => {
-  let email = `${provider}_user@example.com`;
-  let name = `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`;
+// Fetch real profile details from Google's UserInfo API using the access token
+const fetchAndSaveGoogleProfile = async (accessToken) => {
+  let googleData = {
+    email: "google_user@gmail.com",
+    name: "Google User",
+    picture: ""
+  };
 
-  // Try decoding basic user info from JWT if available
   try {
-    const base64Url = token.split('.')[1];
-    if (base64Url) {
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => 
-        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-      ).join(''));
-      const parsed = JSON.parse(jsonPayload);
-      if (parsed.email) email = parsed.email;
-      if (parsed.name) name = parsed.name;
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (res.ok) {
+      const info = await res.json();
+      googleData = {
+        email: info.email || googleData.email,
+        name: info.name || googleData.name,
+        picture: info.picture || "",
+        sub: info.sub
+      };
     }
-  } catch (e) {
-    // Fallback to default mock user structure
+  } catch (err) {
+    console.error("Failed to fetch Google user profile:", err);
   }
 
   const authUser = {
-    id: `${provider}_` + Date.now(),
-    email: email,
-    name: name,
-    provider: provider,
-    token: token,
-    authenticated: true
+    id: googleData.sub ? `google_${googleData.sub}` : `google_${Date.now()}`,
+    email: googleData.email,
+    name: googleData.name,
+    avatar: googleData.picture,
+    provider: "google",
+    token: accessToken,
+    authenticated: true,
+    data: {
+      email: googleData.email,
+      name: googleData.name,
+      avatar: googleData.picture
+    }
   };
 
+  // Save to persistent local storage so AuthContext and header components pick it up
   localStorage.setItem("mock_user", JSON.stringify(authUser));
-  
+
   if (globalThis.__B44_DB__) {
     globalThis.__B44_DB__.auth.me = async () => authUser;
     globalThis.__B44_DB__.auth.isAuthenticated = async () => true;
@@ -65,14 +76,17 @@ export default function Login() {
       const accessToken = params.get("access_token") || params.get("id_token");
 
       if (accessToken) {
-        saveAuthUser(accessToken, "oauth");
+        (async () => {
+          // Fetch real profile from Google
+          await fetchAndSaveGoogleProfile(accessToken);
 
-        // Clear hash from address bar cleanly
-        window.history.replaceState(null, "", window.location.pathname);
+          // Clean token hash out of address bar without re-triggering reload
+          window.history.replaceState(null, "", window.location.pathname);
 
-        setTimeout(() => {
-          window.location.href = returnTo !== "/login" ? returnTo : "/";
-        }, 300);
+          setTimeout(() => {
+            window.location.href = returnTo !== "/login" ? returnTo : "/";
+          }, 300);
+        })();
       }
     }
   }, [returnTo]);
@@ -85,7 +99,13 @@ export default function Login() {
       if (base44?.auth?.loginViaEmailPassword) {
         await base44.auth.loginViaEmailPassword(email, password);
       } else {
-        localStorage.setItem("mock_user", JSON.stringify({ id: "user_123", email, provider: "email" }));
+        localStorage.setItem("mock_user", JSON.stringify({
+          id: "user_123",
+          email: email,
+          name: email.split("@")[0],
+          provider: "email",
+          authenticated: true
+        }));
       }
       window.location.href = returnTo !== "/login" ? returnTo : "/";
     } catch (err) {
@@ -102,10 +122,17 @@ export default function Login() {
 
     if (GOOGLE_CLIENT_ID) {
       const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
-      const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=email%20profile&prompt=select_account`;
+      // Request full openid, email, and profile scope
+      const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=openid%20email%20profile&prompt=select_account`;
       window.location.href = googleOAuthUrl;
     } else {
-      saveAuthUser("mock_google_token", "google");
+      localStorage.setItem("mock_user", JSON.stringify({
+        id: "google_dev",
+        email: "developer@example.com",
+        name: "Developer Account",
+        provider: "google",
+        authenticated: true
+      }));
       setTimeout(() => {
         window.location.href = returnTo !== "/login" ? returnTo : "/";
       }, 400);
@@ -122,7 +149,13 @@ export default function Login() {
       const discordOAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify%20email`;
       window.location.href = discordOAuthUrl;
     } else {
-      saveAuthUser("mock_discord_token", "discord");
+      localStorage.setItem("mock_user", JSON.stringify({
+        id: "discord_dev",
+        email: "discord_dev@example.com",
+        name: "Discord User",
+        provider: "discord",
+        authenticated: true
+      }));
       setTimeout(() => {
         window.location.href = returnTo !== "/login" ? returnTo : "/";
       }, 400);
@@ -135,7 +168,7 @@ export default function Login() {
       {socialLoading && (
         <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center text-white">
           <Loader2 className="w-10 h-10 animate-spin text-cyan-400 mb-3" />
-          <p className="text-sm font-medium text-slate-300">Authenticating with {loadingProvider}...</p>
+          <p className="text-sm font-medium text-slate-300">Syncing profile with {loadingProvider}...</p>
         </div>
       )}
 
@@ -143,14 +176,6 @@ export default function Login() {
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[500px] w-[700px] rounded-full bg-cyan-500/15 blur-[130px]" />
         <div className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-blue-600/15 blur-[120px]" />
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
       </div>
 
       <div className="w-full max-w-[420px]">
@@ -218,7 +243,6 @@ export default function Login() {
             </div>
           )}
 
-          {/* Email form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label htmlFor="email" className="text-sm font-medium text-slate-300">
@@ -275,7 +299,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-sm font-semibold shadow-lg shadow-cyan-500/25 flex items-center justify-center"
+              className="w-full h-11 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-sm font-semibold flex items-center justify-center"
             >
               {loading ? (
                 <>
@@ -291,7 +315,6 @@ export default function Login() {
           </form>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-sm text-slate-400 mt-6">
           Don't have an account?{" "}
           <Link
