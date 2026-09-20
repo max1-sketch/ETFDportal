@@ -1,7 +1,19 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
+const db = globalThis.__B44_DB__ || { 
+  auth: { isAuthenticated: async () => false, me: async () => null }, 
+  entities: new Proxy({}, { 
+    get: () => ({ 
+      list: async () => [], // <--- ADDED list() HERE TO PREVENT CRASH
+      filter: async () => [], 
+      get: async () => null, 
+      create: async () => ({}), 
+      update: async () => ({}), 
+      delete: async () => ({}) 
+    }) 
+  }), 
+  integrations: { Core: { UploadFile: async () => ({ file_url: '' }) } } 
+};
 
 import React, { useState, useEffect } from 'react';
-
 import { ShieldBan } from 'lucide-react';
 import {
   generateFingerprint,
@@ -20,11 +32,18 @@ import { useAuth } from '@/lib/AuthContext';
 
 export default function IpBanCheck({ children }) {
   const [status, setStatus] = useState('checking');
-  const { user, isLoadingAuth } = useAuth(); // 'checking' | 'banned' | 'ok'
+  const { user, isLoadingAuth } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Bypass IP ban logic completely in local development or preview environments
+      if (import.meta.env.DEV) {
+        clearBanToken();
+        if (!cancelled) setStatus('ok');
+        return;
+      }
+
       // 1. User-Agent / client validation — block scripts & headless browsers
       if (!validateClient()) {
         if (!cancelled) setStatus('banned');
@@ -38,11 +57,11 @@ export default function IpBanCheck({ children }) {
       try {
         const [ipRes, bans] = await Promise.all([
           fetch('https://api.ipify.org?format=json').then((r) => r.json()),
-          db.entities.IpBan.list(),
+          db.entities?.IpBan?.list ? db.entities.IpBan.list() : Promise.resolve([]),
         ]);
         if (cancelled) return;
         ip = ipRes.ip;
-        serverBanned = bans.some((b) => b.ip_address === ip);
+        serverBanned = Array.isArray(bans) && bans.some((b) => b.ip_address === ip);
         serverChecked = true;
       } catch {
         // Server unreachable — fail open for the initial check
@@ -65,11 +84,9 @@ export default function IpBanCheck({ children }) {
           clearBanToken();
         }
       } else if (hasBanToken() || await hasBanTokenIDB()) {
-        // Server unreachable but stale token exists — keep blocked (fail closed)
         if (!cancelled) setStatus('banned');
         return;
       } else {
-        // Server unreachable, no token — check fingerprint as fallback
         const fp = await generateFingerprint();
         if (isFingerprintBanned(fp)) {
           if (!cancelled) setStatus('banned');
@@ -88,7 +105,6 @@ export default function IpBanCheck({ children }) {
         try {
           const intel = await checkIpIntelligence(ip);
           if (intel.threat) {
-            // Force proof-of-work challenge for suspicious connections
             const solved = await solveChallenge();
             if (!solved) {
               if (!cancelled) setStatus('banned');
@@ -112,16 +128,18 @@ export default function IpBanCheck({ children }) {
     }
   }, [user, isLoadingAuth]);
 
-  // Record the user's IP and last_seen so admins can see it in user lookup
+  // Record the user's IP and last_seen
   useEffect(() => {
     if (isLoadingAuth || !user) return;
     (async () => {
       try {
         const ipRes = await fetch('https://api.ipify.org?format=json').then((r) => r.json());
-        await db.auth.updateMe({
-          last_ip: ipRes.ip,
-          last_seen: new Date().toISOString(),
-        });
+        if (db.auth?.updateMe) {
+          await db.auth.updateMe({
+            last_ip: ipRes.ip,
+            last_seen: new Date().toISOString(),
+          });
+        }
       } catch {
         // Non-critical — fail silently
       }
@@ -131,12 +149,10 @@ export default function IpBanCheck({ children }) {
   if (status === 'banned') {
     return (
       <div className="fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center p-6 overflow-hidden">
-        {/* Ambient glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-rose-600/10 blur-[120px] pointer-events-none" />
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500/40 to-transparent" />
 
         <div className="relative max-w-lg w-full text-center">
-          {/* Shield icon with pulse ring */}
           <div className="relative mx-auto mb-8 w-fit">
             <div className="absolute inset-0 rounded-3xl bg-rose-500/20 blur-xl animate-pulse-slow" />
             <div className="relative h-20 w-20 rounded-3xl bg-gradient-to-br from-rose-500/15 to-rose-900/20 border border-rose-500/30 flex items-center justify-center shadow-lg shadow-rose-500/10">
@@ -149,7 +165,6 @@ export default function IpBanCheck({ children }) {
             Your IP address has been banned from this website. If you believe this is an error, please contact support.
           </p>
 
-          {/* Support card */}
           <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-5 text-left">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-rose-400/80 mb-3">Need help?</div>
             <a

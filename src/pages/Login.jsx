@@ -4,25 +4,28 @@ import { Waves, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, ShieldCheck } from
 import GoogleIcon from "@/components/GoogleIcon";
 import { safeReturnTo } from "@/lib/authReturnTo";
 
-// Local DB & Auth Fallback
+// Helper to set persistent mock login state
+const setLoggedInUser = (email = "developer@example.com", provider = "google") => {
+  const user = { id: "user_123", email, provider, authenticated: true };
+  localStorage.setItem("mock_user", JSON.stringify(user));
+  
+  // Update global runtime db mock if present
+  if (globalThis.__B44_DB__) {
+    globalThis.__B44_DB__.auth.me = async () => user;
+    globalThis.__B44_DB__.auth.isAuthenticated = async () => true;
+  }
+};
+
+// Global DB & Auth Fallback
 const db = globalThis.__B44_DB__ || { 
   auth: { 
-    isAuthenticated: async () => true, 
-    me: async () => ({ id: 'user_123', email: 'developer@example.com' }),
+    isAuthenticated: async () => !!localStorage.getItem("mock_user"), 
+    me: async () => JSON.parse(localStorage.getItem("mock_user")) || null,
     loginWithProvider: (provider, redirect) => {
-      localStorage.setItem('mock_user', JSON.stringify({
-        id: 'user_123',
-        email: 'developer@example.com',
-        provider: provider
-      }));
-      window.location.href = redirect || '/';
+      setLoggedInUser("developer@example.com", provider);
     },
-    loginViaEmailPassword: async () => {
-      localStorage.setItem('mock_user', JSON.stringify({
-        id: 'user_123',
-        email: 'developer@example.com',
-        provider: 'email'
-      }));
+    loginViaEmailPassword: async (email) => {
+      setLoggedInUser(email || "developer@example.com", "email");
       return { success: true };
     },
   }, 
@@ -48,23 +51,19 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const returnTo = safeReturnTo();
 
-  // Catch the Google/Discord OAuth redirect token from URL hash
+  // Catch OAuth callback token from URL
   useEffect(() => {
     const hash = window.location.hash;
     if (hash && hash.includes("access_token")) {
       setSocialLoading(true);
       const params = new URLSearchParams(hash.replace("#", "?"));
-      const accessToken = params.get("access_token");
+      const token = params.get("access_token");
 
-      if (accessToken) {
-        localStorage.setItem("mock_user", JSON.stringify({
-          id: "google_user",
-          token: accessToken,
-          authenticated: true
-        }));
-        // Clean URL and navigate without white flash
+      if (token) {
+        setLoggedInUser("google_user@gmail.com", "google");
+        // Clear hash token from address bar cleanly without page reload
         window.history.replaceState(null, "", window.location.pathname);
-        navigate(returnTo || "/");
+        navigate(returnTo !== "/login" ? returnTo : "/");
       }
     }
   }, [navigate, returnTo]);
@@ -75,7 +74,7 @@ export default function Login() {
     setLoading(true);
     try {
       await db.auth.loginViaEmailPassword(email, password);
-      navigate(returnTo || "/");
+      navigate(returnTo !== "/login" ? returnTo : "/");
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -92,8 +91,9 @@ export default function Login() {
       const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=email%20profile&prompt=select_account`;
       window.location.href = googleOAuthUrl;
     } else {
+      setLoggedInUser("developer@example.com", "google");
       setTimeout(() => {
-        db.auth.loginWithProvider("google", returnTo);
+        navigate(returnTo !== "/login" ? returnTo : "/");
       }, 300);
     }
   };
@@ -107,15 +107,16 @@ export default function Login() {
       const discordOAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify%20email`;
       window.location.href = discordOAuthUrl;
     } else {
+      setLoggedInUser("developer@example.com", "discord");
       setTimeout(() => {
-        db.auth.loginWithProvider("discord", returnTo);
+        navigate(returnTo !== "/login" ? returnTo : "/");
       }, 300);
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-4 py-10 relative overflow-hidden">
-      {/* Full-screen backdrop loader to eliminate white screen flashes */}
+      {/* Backdrop loading overlay */}
       {socialLoading && (
         <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center text-white">
           <Loader2 className="w-10 h-10 animate-spin text-cyan-400 mb-3" />
@@ -127,18 +128,9 @@ export default function Login() {
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[500px] w-[700px] rounded-full bg-cyan-500/15 blur-[130px]" />
         <div className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-blue-600/15 blur-[120px]" />
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
       </div>
 
       <div className="w-full max-w-[420px]">
-        {/* Brand header */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2.5 mb-6 group">
             <span className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 shadow-lg shadow-cyan-500/30">
@@ -161,7 +153,6 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Card */}
         <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-cyan-950/40 p-7">
           <div className="space-y-3">
             <button
