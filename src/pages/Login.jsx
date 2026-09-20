@@ -62,11 +62,31 @@ export default function Login() {
   };
 
   const handleGoogle = () => {
-    db.auth.loginWithProvider("google", returnTo);
+    const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    if (GOOGLE_CLIENT_ID) {
+      // Direct real OAuth flow to Google
+      const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
+      const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=email%20profile&prompt=select_account`;
+      window.location.href = googleOAuthUrl;
+    } else {
+      // Fallback to mock login if env key isn't added yet
+      db.auth.loginWithProvider("google", returnTo);
+    }
   };
 
   const handleDiscord = () => {
-    db.auth.loginWithProvider("discord", returnTo);
+    const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
+
+    if (DISCORD_CLIENT_ID) {
+      // Direct real OAuth flow to Discord
+      const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
+      const discordOAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify%20email`;
+      window.location.href = discordOAuthUrl;
+    } else {
+      // Fallback to mock login if env key isn't added yet
+      db.auth.loginWithProvider("discord", returnTo);
+    }
   };
 
   return (
