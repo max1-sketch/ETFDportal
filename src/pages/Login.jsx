@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Waves, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
 import GoogleIcon from "@/components/GoogleIcon";
 import { safeReturnTo } from "@/lib/authReturnTo";
@@ -10,7 +10,6 @@ const db = globalThis.__B44_DB__ || {
     isAuthenticated: async () => true, 
     me: async () => ({ id: 'user_123', email: 'developer@example.com' }),
     loginWithProvider: (provider, redirect) => {
-      console.log(`[Local Mock] Authenticating via ${provider}...`);
       localStorage.setItem('mock_user', JSON.stringify({
         id: 'user_123',
         email: 'developer@example.com',
@@ -40,12 +39,35 @@ const db = globalThis.__B44_DB__ || {
 };
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const returnTo = safeReturnTo();
+
+  // Catch the Google/Discord OAuth redirect token from URL hash
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes("access_token")) {
+      setSocialLoading(true);
+      const params = new URLSearchParams(hash.replace("#", "?"));
+      const accessToken = params.get("access_token");
+
+      if (accessToken) {
+        localStorage.setItem("mock_user", JSON.stringify({
+          id: "google_user",
+          token: accessToken,
+          authenticated: true
+        }));
+        // Clean URL and navigate without white flash
+        window.history.replaceState(null, "", window.location.pathname);
+        navigate(returnTo || "/");
+      }
+    }
+  }, [navigate, returnTo]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,7 +75,7 @@ export default function Login() {
     setLoading(true);
     try {
       await db.auth.loginViaEmailPassword(email, password);
-      window.location.href = returnTo;
+      navigate(returnTo || "/");
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -62,35 +84,45 @@ export default function Login() {
   };
 
   const handleGoogle = () => {
+    setSocialLoading(true);
     const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (GOOGLE_CLIENT_ID) {
-      // Direct real OAuth flow to Google
       const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
       const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=email%20profile&prompt=select_account`;
       window.location.href = googleOAuthUrl;
     } else {
-      // Fallback to mock login if env key isn't added yet
-      db.auth.loginWithProvider("google", returnTo);
+      setTimeout(() => {
+        db.auth.loginWithProvider("google", returnTo);
+      }, 300);
     }
   };
 
   const handleDiscord = () => {
+    setSocialLoading(true);
     const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
 
     if (DISCORD_CLIENT_ID) {
-      // Direct real OAuth flow to Discord
       const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
       const discordOAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify%20email`;
       window.location.href = discordOAuthUrl;
     } else {
-      // Fallback to mock login if env key isn't added yet
-      db.auth.loginWithProvider("discord", returnTo);
+      setTimeout(() => {
+        db.auth.loginWithProvider("discord", returnTo);
+      }, 300);
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-4 py-10 relative overflow-hidden">
+      {/* Full-screen backdrop loader to eliminate white screen flashes */}
+      {socialLoading && (
+        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center text-white">
+          <Loader2 className="w-10 h-10 animate-spin text-cyan-400 mb-3" />
+          <p className="text-sm font-medium text-slate-300">Authenticating with provider...</p>
+        </div>
+      )}
+
       {/* Background glow */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[500px] w-[700px] rounded-full bg-cyan-500/15 blur-[130px]" />
@@ -131,7 +163,6 @@ export default function Login() {
 
         {/* Card */}
         <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-cyan-950/40 p-7">
-          {/* Social login buttons */}
           <div className="space-y-3">
             <button
               type="button"
@@ -154,7 +185,6 @@ export default function Login() {
             </button>
           </div>
 
-          {/* OR divider */}
           <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-white/10" />
@@ -172,7 +202,6 @@ export default function Login() {
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label htmlFor="email" className="text-sm font-medium text-slate-300">
@@ -249,7 +278,6 @@ export default function Login() {
           </form>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-sm text-slate-400 mt-6">
           Don't have an account?{" "}
           <Link
