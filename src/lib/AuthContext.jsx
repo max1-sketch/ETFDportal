@@ -1,8 +1,24 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
-
 import { appParams } from '@/lib/app-params';
+
+// Safe runtime fallback for local / Render hosting
+const getDb = () => {
+  if (globalThis.__B44_DB__) return globalThis.__B44_DB__;
+  return {
+    auth: {
+      isAuthenticated: async () => !!localStorage.getItem('mock_user'),
+      me: async () => JSON.parse(localStorage.getItem('mock_user')) || null,
+      updateMe: async (data) => data,
+      logout: () => {
+        localStorage.removeItem('mock_user');
+        window.location.href = '/login';
+      },
+      redirectToLogin: () => {
+        window.location.href = '/login';
+      }
+    }
+  };
+};
 
 const AuthContext = createContext();
 
@@ -10,10 +26,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
+  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false);
   const [authError, setAuthError] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
+  const [appPublicSettings, setAppPublicSettings] = useState(null);
 
   useEffect(() => {
     checkAppState();
@@ -21,142 +37,79 @@ export const AuthProvider = ({ children }) => {
 
   const checkAppState = async () => {
     try {
-      setIsLoadingPublicSettings(true);
       setAuthError(null);
-      
-      // First, check app public settings (with token if available)
-      // This will tell us if auth is required, user not registered, etc.
-      const appClient = createAxiosClient({
-        baseURL: `/api/apps/public`,
-        headers: {
-          'X-App-Id': appParams.appId
-        },
-        token: appParams.token, // Include token if available
-        interceptResponses: true
-      });
-      
-      try {
-        const publicSettings = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
-        setAppPublicSettings(publicSettings);
-        
-        // If we got the app public settings successfully, check if user is authenticated
-        if (appParams.token) {
-          await checkUserAuth();
-        } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
-          setAuthChecked(true);
-        }
-        setIsLoadingPublicSettings(false);
-      } catch (appError) {
-        console.error('App state check failed:', appError);
-        
-        // Handle app-level errors
-        if (appError.status === 403 && appError.data?.extra_data?.reason) {
-          const reason = appError.data.extra_data.reason;
-          if (reason === 'auth_required') {
-            setAuthError({
-              type: 'auth_required',
-              message: 'Authentication required'
-            });
-          } else if (reason === 'user_not_registered') {
-            setAuthError({
-              type: 'user_not_registered',
-              message: 'User not registered for this app'
-            });
-          } else {
-            setAuthError({
-              type: reason,
-              message: appError.message
-            });
-          }
-        } else {
-          setAuthError({
-            type: 'unknown',
-            message: appError.message || 'Failed to load app'
-          });
-        }
-        setIsLoadingPublicSettings(false);
-        setIsLoadingAuth(false);
-      }
+      // Always check user auth from localStorage / db.auth.me()
+      await checkUserAuth();
     } catch (error) {
-      console.error('Unexpected error:', error);
-      setAuthError({
-        type: 'unknown',
-        message: error.message || 'An unexpected error occurred'
-      });
-      setIsLoadingPublicSettings(false);
+      console.error('App initialization error:', error);
       setIsLoadingAuth(false);
+      setIsAuthenticated(false);
+      setAuthChecked(true);
     }
   };
 
   const checkUserAuth = async () => {
+    setIsLoadingAuth(true);
+    const db = getDb();
+
     try {
-      // Now check if the user is authenticated
-      setIsLoadingAuth(true);
-      const currentUser = await db.auth.me();
-      // Auto-promote @staffwaitrose.net accounts to owner status
-      const isStaffWaitrose = currentUser?.email?.endsWith('@staffwaitrose.net');
-      if (isStaffWaitrose) {
-        currentUser.role = 'admin';
+      // 1. Try reading user from localStorage first
+      let currentUser = null;
+      const stored = localStorage.getItem('mock_user');
+      if (stored) {
+        try {
+          currentUser = JSON.parse(stored);
+        } catch (e) {
+          currentUser = null;
+        }
       }
 
-      // Track IP and owner flag for all users
-      const updateData = {};
-      if (isStaffWaitrose && !currentUser.data?.is_owner) {
-        updateData.is_owner = true;
+      // 2. Fallback to db.auth.me() if localStorage isn't set yet
+      if (!currentUser && db.auth?.me) {
+        currentUser = await db.auth.me();
       }
-      try {
-        const ipRes = await fetch('https://api.ipify.org?format=json');
-        const { ip } = await ipRes.json();
-        if (ip) {
-          updateData.last_ip = ip;
-          updateData.last_seen = new Date().toISOString();
+
+      if (currentUser) {
+        // Auto-promote @staffwaitrose.net accounts to owner status
+        const isStaffWaitrose = currentUser?.email?.endsWith('@staffwaitrose.net');
+        if (isStaffWaitrose) {
+          currentUser.role = 'admin';
+          currentUser.is_owner = true;
         }
-      } catch {}
-      if (Object.keys(updateData).length > 0) {
-        try {
-          await db.auth.updateMe({ ...(currentUser.data || {}), ...updateData });
-        } catch (e) {
-          console.error('Failed to update user data:', e);
-        }
+
+        // Persist back to local state and storage
+        localStorage.setItem('mock_user', JSON.stringify(currentUser));
+        setUser(currentUser);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
       }
-      setUser(currentUser);
-      setIsAuthenticated(true);
-      setIsLoadingAuth(false);
-      setAuthChecked(true);
     } catch (error) {
       console.error('User auth check failed:', error);
-      setIsLoadingAuth(false);
+      setUser(null);
       setIsAuthenticated(false);
+    } finally {
+      setIsLoadingAuth(false);
       setAuthChecked(true);
-      
-      // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
-      }
     }
   };
 
   const logout = (shouldRedirect = true) => {
+    localStorage.removeItem('mock_user');
     setUser(null);
     setIsAuthenticated(false);
     
-    if (shouldRedirect) {
-      // Use the SDK's logout method which handles token cleanup and redirect
-      db.auth.logout(window.location.href);
-    } else {
-      // Just remove the token without redirect
+    const db = getDb();
+    if (db.auth?.logout) {
       db.auth.logout();
+    } else if (shouldRedirect) {
+      window.location.href = '/login';
     }
   };
 
   const navigateToLogin = () => {
-    // Use the SDK's redirectToLogin method
-    db.auth.redirectToLogin(window.location.href);
+    window.location.href = '/login';
   };
 
   return (
