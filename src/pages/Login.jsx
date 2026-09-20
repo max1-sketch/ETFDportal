@@ -5,12 +5,12 @@ import GoogleIcon from "@/components/GoogleIcon";
 import { safeReturnTo } from "@/lib/authReturnTo";
 import { base44 } from "@/api/base44Client";
 
-// Helper to save authenticated user into local storage and memory
-const saveGoogleAuthUser = (token) => {
-  let email = "google_user@gmail.com";
-  let name = "Google User";
+// Helper to save authenticated user into local storage and global state
+const saveAuthUser = (token, provider = "google") => {
+  let email = `${provider}_user@example.com`;
+  let name = `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`;
 
-  // Try decoding basic user info from Google JWT if returned
+  // Try decoding basic user info from JWT if available
   try {
     const base64Url = token.split('.')[1];
     if (base64Url) {
@@ -23,21 +23,20 @@ const saveGoogleAuthUser = (token) => {
       if (parsed.name) name = parsed.name;
     }
   } catch (e) {
-    // Fallback to default mock user if standard access_token string
+    // Fallback to default mock user structure
   }
 
   const authUser = {
-    id: "google_" + Date.now(),
+    id: `${provider}_` + Date.now(),
     email: email,
     name: name,
-    provider: "google",
+    provider: provider,
     token: token,
     authenticated: true
   };
 
   localStorage.setItem("mock_user", JSON.stringify(authUser));
   
-  // Sync runtime base44 mock
   if (globalThis.__B44_DB__) {
     globalThis.__B44_DB__.auth.me = async () => authUser;
     globalThis.__B44_DB__.auth.isAuthenticated = async () => true;
@@ -53,10 +52,11 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState("OAuth");
   const [showPassword, setShowPassword] = useState(false);
   const returnTo = safeReturnTo();
 
-  // Handle Google OAuth Callback (#access_token=...)
+  // Handle OAuth Callback (#access_token=...)
   useEffect(() => {
     const hash = window.location.hash;
     if (hash && (hash.includes("access_token") || hash.includes("id_token"))) {
@@ -65,13 +65,11 @@ export default function Login() {
       const accessToken = params.get("access_token") || params.get("id_token");
 
       if (accessToken) {
-        // 1. Save user state
-        saveGoogleAuthUser(accessToken);
+        saveAuthUser(accessToken, "oauth");
 
-        // 2. Clear token hash from browser address bar cleanly
+        // Clear hash from address bar cleanly
         window.history.replaceState(null, "", window.location.pathname);
 
-        // 3. Smooth transition to home or target page
         setTimeout(() => {
           window.location.href = returnTo !== "/login" ? returnTo : "/";
         }, 300);
@@ -98,17 +96,33 @@ export default function Login() {
   };
 
   const handleGoogle = () => {
+    setLoadingProvider("Google");
     setSocialLoading(true);
     const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (GOOGLE_CLIENT_ID) {
-      // Send user to Google OAuth screen
       const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
       const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=email%20profile&prompt=select_account`;
       window.location.href = googleOAuthUrl;
     } else {
-      // Fallback for local testing without Client ID
-      saveGoogleAuthUser("mock_token");
+      saveAuthUser("mock_google_token", "google");
+      setTimeout(() => {
+        window.location.href = returnTo !== "/login" ? returnTo : "/";
+      }, 400);
+    }
+  };
+
+  const handleDiscord = () => {
+    setLoadingProvider("Discord");
+    setSocialLoading(true);
+    const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
+
+    if (DISCORD_CLIENT_ID) {
+      const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
+      const discordOAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify%20email`;
+      window.location.href = discordOAuthUrl;
+    } else {
+      saveAuthUser("mock_discord_token", "discord");
       setTimeout(() => {
         window.location.href = returnTo !== "/login" ? returnTo : "/";
       }, 400);
@@ -117,11 +131,11 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-4 py-10 relative overflow-hidden">
-      {/* Backdrop loading overlay during OAuth processing */}
+      {/* Backdrop loading overlay */}
       {socialLoading && (
         <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center text-white">
           <Loader2 className="w-10 h-10 animate-spin text-cyan-400 mb-3" />
-          <p className="text-sm font-medium text-slate-300">Logging you in with Google...</p>
+          <p className="text-sm font-medium text-slate-300">Authenticating with {loadingProvider}...</p>
         </div>
       )}
 
@@ -129,6 +143,14 @@ export default function Login() {
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[500px] w-[700px] rounded-full bg-cyan-500/15 blur-[130px]" />
         <div className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-blue-600/15 blur-[120px]" />
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
       </div>
 
       <div className="w-full max-w-[420px]">
@@ -165,6 +187,17 @@ export default function Login() {
             >
               <GoogleIcon className="w-5 h-5" />
               Continue with Google
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDiscord}
+              className="w-full h-11 rounded-lg bg-[#5865F2] hover:bg-[#4752C4] text-white text-sm font-medium flex items-center justify-center gap-2.5 transition-colors"
+            >
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 127.14 96.36">
+                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1,105.25,105.25,0,0,0,32.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53.01s5.18-12.71,11.45-12.71c6.28,0,11.47,5.72,11.36,12.71C53.81,60,48.73,65.69,42.45,65.69Zm42.24,0C78.42,65.69,73.25,60,73.25,53.01s5.17-12.71,11.44-12.71c6.28,0,11.47,5.72,11.36,12.71C96.05,60,90.96,65.69,84.69,65.69Z"/>
+              </svg>
+              Continue with Discord
             </button>
           </div>
 
@@ -206,9 +239,17 @@ export default function Login() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="password" className="text-sm font-medium text-slate-300">
-                Password
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="text-sm font-medium text-slate-300">
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
@@ -220,18 +261,46 @@ export default function Login() {
                   className="w-full h-11 rounded-lg border border-white/10 bg-white/[0.03] pl-10 pr-10 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  tabIndex={-1}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-1"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-sm font-semibold flex items-center justify-center"
+              className="w-full h-11 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-sm font-semibold shadow-lg shadow-cyan-500/25 flex items-center justify-center"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Log in <ArrowRight className="w-4 h-4 ml-1.5" /></>}
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                <>
+                  Log in <ArrowRight className="w-4 h-4 ml-1.5" />
+                </>
+              )}
             </button>
           </form>
         </div>
+
+        {/* Footer */}
+        <p className="text-center text-sm text-slate-400 mt-6">
+          Don't have an account?{" "}
+          <Link
+            to={"/register" + (returnTo !== "/" ? "?returnTo=" + encodeURIComponent(returnTo) : "")}
+            className="font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
+          >
+            Sign up here
+          </Link>
+        </p>
       </div>
     </div>
   );
